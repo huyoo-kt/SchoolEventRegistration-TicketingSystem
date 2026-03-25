@@ -1,3 +1,3 @@
 interface Payable {
-     double computeFInalFee();
+     public double computeFinalFee(Participant p, Ticket t, Participant e);
 }

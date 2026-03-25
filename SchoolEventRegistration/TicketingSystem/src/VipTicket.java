@@ -20,12 +20,15 @@ this.premiumFee = premiumFee;
 
 
 double computeFee(){
-    return
+    return getBaseFee() * 2;
 }
 
 
 void displayTicketInfo(){
-
+    System.out.println("Ticket Type      : VIP");
+    System.out.println("Base Fee            : " + String.format("%.2f",getBaseFee()));
+    System.out.println("VIP Access       : Priority Seating");
+    System.out.println("Event Kit        : Included");
 }
     
 

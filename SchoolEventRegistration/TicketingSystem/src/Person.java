@@ -1,8 +1,8 @@
 abstract class Person {
-    String personId;
-    String fullName;
-    int age;
-    String gender; 
+    private String personId;
+    private String fullName;
+    private int age;
+    private String gender; 
     
     
     //constructors
@@ -41,10 +41,7 @@ abstract class Person {
         return gender;
     }
 
-
-    void displayDetails(){
-        
-    }
+    public abstract void displayDetails();
 
 
 }

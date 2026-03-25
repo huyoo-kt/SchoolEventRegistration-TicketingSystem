@@ -44,6 +44,7 @@ abstract class Ticket {
 
     //display ng info
     // override mo depende if Vip or Regular
+    abstract double computeFee();
     abstract void displayTicketInfo();
     
  

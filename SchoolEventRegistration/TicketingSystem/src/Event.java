@@ -3,16 +3,15 @@ public class Event {
     String eventName;
     String venue;
     String eventDate;
-    int capacity;
+    int capacity = 0;
     int registeredCount = 0;
 
-    Event( String eventId, String eventName,String venue, String eventDate,int capacity, int registeredCount ){
+    Event( String eventId, String eventName,String venue, String eventDate,int capacity){
         this.eventId = eventId;
         this.eventName = eventName;
         this.venue = venue;
         this.eventDate = eventDate;
         this.capacity = capacity;
-        this.registeredCount = registeredCount;
     }
     
     //getters
@@ -39,9 +38,6 @@ public class Event {
     int getRegisteredCount(){
         return registeredCount;
     }
-
-
-
 
     //setters
     void setEventId(String eventId){
@@ -74,7 +70,7 @@ public class Event {
     }
 
     void decrementRegisteredCount(){
-        if(registeredCount >= 0){
+        if(registeredCount > 0){
         registeredCount--;
         }
         else{
@@ -84,7 +80,12 @@ public class Event {
     }
 
     void displayEventInfo(){
-        
+        System.out.println("Event ID         : " + eventId);
+        System.out.println("Event Name       : " + eventName);
+        System.out.println("Venue            : " + venue);
+        System.out.println("Event Date       : " + eventDate);
+        System.out.println("Capacity         : " + capacity);
+        System.out.println("Registered Count : " + registeredCount);
     }
 
     
