@@ -84,6 +84,8 @@ public class Registration {
         this.registrationStatus = registrationStatus;
     }
 
+
+    //choice 6 to, eto
     void displayRegistrationSummary(){
         System.out.println("Registration ID    : " + registrationId);
         System.out.println("Participant Name   : " + participant.getFullName());

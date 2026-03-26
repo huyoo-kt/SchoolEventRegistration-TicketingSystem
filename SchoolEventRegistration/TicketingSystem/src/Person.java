@@ -1,12 +1,12 @@
 abstract class Person {
-    private String personId;
+    private int personId;
     private String fullName;
     private int age;
     private String gender; 
     
     
     //constructors
-    Person(String personId, String fullName, int age, String gender){
+    Person(int personId, String fullName, int age, String gender){
         this.personId = personId;
         this.fullName = fullName;
         this.age = age;
@@ -14,7 +14,7 @@ abstract class Person {
     }
     
     //setters
-    void setPersonId(String personId){
+    void setPersonId(int personId){
         this.personId = personId;
     }
     void setFullName(String fullname){
@@ -28,7 +28,7 @@ abstract class Person {
     }
 
     //getters
-    String getPersonId(){
+    int getPersonId(){
         return personId;
     }
     String getFullName(){

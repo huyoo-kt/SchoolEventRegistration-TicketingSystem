@@ -46,14 +46,6 @@ abstract class Ticket {
     // override mo depende if Vip or Regular
     abstract double computeFee();
     abstract void displayTicketInfo();
-    
- 
-
-
-
-
-
-
 
 
 }

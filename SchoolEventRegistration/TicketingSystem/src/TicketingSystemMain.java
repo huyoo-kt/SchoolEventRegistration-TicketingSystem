@@ -6,13 +6,21 @@ import java.sql.SQLException;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Scanner;
+import java.sql.Statement;
 
 public class TicketingSystemMain {
     
     private static Scanner sc = new Scanner(System.in);
     private static String ticketDTB = "jdbc:sqlite:TicketingSystem.db";
 
+    // para sa temporary storage
+    private static List<Event> EventS = new ArrayList<>();
+    private static List<Participant> participantS = new ArrayList<>();
+    private static List<Registration> RegistrationS = new ArrayList<>();
+  
     // shortcut for sql connection
     private static Connection conn() throws SQLException {
         return DriverManager.getConnection(ticketDTB);
@@ -56,7 +64,7 @@ public class TicketingSystemMain {
     }
 
     //event database
-    static void createTables() {
+    private static void createTables() {     
       try (Connection conn = conn()) 
       {
          //para ma enable yung foreign key
@@ -70,8 +78,8 @@ public class TicketingSystemMain {
 
         // table ng events
          String eventTable = """
-        CREATE TABLE IF NOT EXISTS events (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
+         create table if not exists events (
+            event_id INTEGER PRIMARY KEY AUTOINCREMENT,
             event_name TEXT NOT NULL,
             event_venue TEXT NOT NULL,
             event_date TEXT NOT NULL,
@@ -88,8 +96,8 @@ public class TicketingSystemMain {
 
         // table ng mga participants
         String participantTable = """
-            CREATE TABLE IF NOT EXISTS participants (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            create table if not exists participants (
+            participant_id INTEGER PRIMARY KEY AUTOINCREMENT,
             participant_name TEXT NOT NULL,
             age INTEGER NOT NULL,
             participant_type TEXT NOT NULL,
@@ -107,8 +115,8 @@ public class TicketingSystemMain {
         
         //table ng registration, eto yung may need ng foreign key, para ma get yung values sa ibang tables
         String registrationTable = """
-        CREATE TABLE IF NOT EXISTS registrations (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
+        create table if not exists registrations (
+            registration_id INTEGER PRIMARY KEY AUTOINCREMENT,
             participant_id INTEGER NOT NULL,
             event_id INTEGER NOT NULL,
             ticket_type TEXT NOT NULL,
@@ -129,18 +137,95 @@ public class TicketingSystemMain {
 
     }catch (SQLException e) {System.out.println("Error creating tables: " + e.getMessage());}
 
-
 }
+   
+    
 
+    private static void addEvent(List<Event> e1){
+        String e_query = "INSERT INTO events(event_name, event_venue, event_date, event_capacity) VALUES(?, ?, ?, ?)";
+        System.out.println("---ADD EVENT---");
+
+        String ename = nLine("Event name: ");
+        String evenue = nLine("Event venue: ");
+        String edate = nLine("Event date: ");
+        int ecapacity = nInt("Event capacity: ");
+
+        try(Connection conn = conn();
+        PreparedStatement prep2 = conn.prepareStatement(e_query, Statement.RETURN_GENERATED_KEYS)) {
+             // need gumamit nyang statement.return since naka auto increment yung id sa database
+        
+            prep2.setString(1,ename);
+            prep2.setString(2,evenue);
+            prep2.setString(3,edate);
+            prep2.setInt(4,ecapacity);
+            int rows = prep2.executeUpdate();
+            System.out.println(rows + " Inserted Sucessfully");
+
+            ResultSet get_id = prep2.getGeneratedKeys(); 
+           if (get_id.next()) 
+            {int id = get_id.getInt(1);
+                 e1.add(new Event(id, ename, evenue, edate, ecapacity));
+            }
+
+      } catch (SQLException e) {
+       System.out.println("Error Inserting data." + e.getMessage());
+      }
+    }
+
+
+    private static void addParticipant(List<Participant> p1){
+        String e_query = "INSERT INTO participants(participant_name, age, participant_type, participant_organization, contact_no, earlybird ) VALUES(?, ?, ?, ?, ?, ?)";
+        System.out.println("---REGISTER PARTICIPANT---");
+
+        String pfn = nLine("Enter Full Name  : ");
+        int page = nInt("Enter Age           : ");
+        String pt = nLine("Enter participant type: ");
+        String po = nLine("Enter participant_organization: ");
+        String pc = nLine("Enter contact_no: "); 
+        String eb = nLine("Earlybird?: ").toLowerCase().trim();
+
+        try(Connection conn = conn();
+        PreparedStatement prep3 = conn.prepareStatement(e_query, Statement.RETURN_GENERATED_KEYS)) {
+             // same concept lang dito
+        
+            prep3.setString(1,pfn);
+            prep3.setInt(2,page);
+            prep3.setString(3,pt);
+            prep3.setString(4,po);
+            prep3.setString(5,pc);
+            prep3.setString(6,eb);
+
+
+            int rows = prep3.executeUpdate();
+            System.out.println(rows + " Inserted Sucessfully");
+
+            ResultSet get_id = prep3.getGeneratedKeys(); 
+           if (get_id.next()) 
+            {int id = get_id.getInt(1);
+                p1.add(new Participant(id, pfn, page, pt, po, pc, eb));
+            }
+
+      } catch (SQLException e) {
+       System.out.println("Error Inserting data." + e.getMessage());
+      }
+    }
+
+
+
+
+    
+  
 
     
     public static void main(String[] args) {
 
+        System.out.println(EventS);
         createTables();
-        mainMenu();
-
+        
+        
         int choice;
         do{
+        mainMenu();
         choice = 0;
         try{
         choice = nInt("Enter choice: ");
@@ -150,10 +235,10 @@ public class TicketingSystemMain {
          }
         switch (choice) {
             case 1:
-              
+                addEvent(EventS);
                 break;
             case 2:
-                // codes dito
+                addParticipant(participantS);
                 break;
             case 3:
                 // codes dito
