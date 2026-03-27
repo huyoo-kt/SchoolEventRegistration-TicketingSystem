@@ -5,7 +5,7 @@ public class Participant extends Person {
     private String earlybird = "disable";
 
 
-    Participant(int personId, String fullName, int age, String gender,String participantType,String organization,String contactNumber){
+    Participant(String personId, String fullName, int age, String gender,String participantType,String organization,String contactNumber){
         super(personId,  fullName,  age, gender);
         this.participantType = participantType;
         this.organization = organization;

@@ -1,13 +1,13 @@
 
 public class Event {
-    int eventId;
+    String eventId;
     String eventName;
     String venue;
     String eventDate;
     int capacity = 0;
     int registeredCount = 0;
 
-    Event( int eventId, String eventName,String venue, String eventDate,int capacity){
+    Event( String eventId, String eventName,String venue, String eventDate,int capacity){
         this.eventId = eventId;
         this.eventName = eventName;
         this.venue = venue;
@@ -16,7 +16,7 @@ public class Event {
     }
     
     //getters
-    int getEventId(){
+    String getEventId(){
         return eventId;
     }
 
@@ -41,7 +41,7 @@ public class Event {
     }
 
     //setters
-    void setEventId(int eventId){
+    void setEventId(String eventId){
         this.eventId = eventId;
     }
 

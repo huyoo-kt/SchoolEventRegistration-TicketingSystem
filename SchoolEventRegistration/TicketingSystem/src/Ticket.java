@@ -5,6 +5,7 @@ abstract class Ticket {
     private double baseFee;
 
     
+
     // constructor
     Ticket(String ticketId, String ticketType, double baseFee)
     {

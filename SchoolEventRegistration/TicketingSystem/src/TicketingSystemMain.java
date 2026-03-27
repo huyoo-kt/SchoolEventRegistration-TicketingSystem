@@ -1,30 +1,20 @@
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Scanner;
-import java.sql.Statement;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.util.*;
+
 
 public class TicketingSystemMain {
     
     private static Scanner sc = new Scanner(System.in);
-    private static String ticketDTB = "jdbc:sqlite:TicketingSystem.db";
 
     // para sa temporary storage
-    private static List<Event> EventS = new ArrayList<>();
+    private static List<Event> eventS = new ArrayList<>();
     private static List<Participant> participantS = new ArrayList<>();
-    private static List<Registration> RegistrationS = new ArrayList<>();
-  
-    // shortcut for sql connection
-    private static Connection conn() throws SQLException {
-        return DriverManager.getConnection(ticketDTB);
-    }
+    private static List<Registration> registrationS = new ArrayList<>();
+
 
     // shortcut for Scanner String
     private static String nLine(String que){
@@ -36,7 +26,7 @@ public class TicketingSystemMain {
     private static int nInt(String que){
         while(true){
         System.out.print(que);
-        String input = sc.nextLine();   
+        String input = sc.nextLine().trim();   
         try {         
            
              return Integer.parseInt(input);
@@ -63,185 +53,124 @@ public class TicketingSystemMain {
         System.out.println("10. Exit");
     }
 
-    //event database
-    private static void createTables() {     
-      try (Connection conn = conn()) 
-      {
-         //para ma enable yung foreign key
-        String preps = "PRAGMA foreign_keys = ON";
-        try (PreparedStatement prepare = conn.prepareStatement(preps))
-        {
-            prepare.execute();
-           System.out.println("Foreign keys enabled.");
-        } 
-
-
-        // table ng events
-         String eventTable = """
-         create table if not exists events (
-            event_id INTEGER PRIMARY KEY AUTOINCREMENT,
-            event_name TEXT NOT NULL,
-            event_venue TEXT NOT NULL,
-            event_date TEXT NOT NULL,
-            event_capacity INTEGER NOT NULL
-        )
-        """;    
-        try (PreparedStatement ps = conn.prepareStatement(eventTable))
-        {
-            ps.execute();
-            System.out.println("Event table ready.");
-        }
-
-
-
-        // table ng mga participants
-        String participantTable = """
-            create table if not exists participants (
-            participant_id INTEGER PRIMARY KEY AUTOINCREMENT,
-            participant_name TEXT NOT NULL,
-            age INTEGER NOT NULL,
-            participant_type TEXT NOT NULL,
-            participant_organization TEXT NOT NULL,
-            contact_no TEXT NOT NULL,
-            earlybird INTEGER NOT NULL
-        )
-        """;
-        try (PreparedStatement ps = conn.prepareStatement(participantTable)) 
-        {
-            ps.execute();
-            System.out.println("Participant table ready.");
-        }
-
-        
-        //table ng registration, eto yung may need ng foreign key, para ma get yung values sa ibang tables
-        String registrationTable = """
-        create table if not exists registrations (
-            registration_id INTEGER PRIMARY KEY AUTOINCREMENT,
-            participant_id INTEGER NOT NULL,
-            event_id INTEGER NOT NULL,
-            ticket_type TEXT NOT NULL,
-            original_fee REAL NOT NULL,
-            discount_amount REAL NOT NULL,
-            final_fee REAL NOT NULL,
-            payment_status TEXT NOT NULL,
-            registration_status TEXT NOT NULL,
-            FOREIGN KEY (participant_id) REFERENCES participants(id),
-            FOREIGN KEY (event_id) REFERENCES events(id)
-        )
-        """;
-        try (PreparedStatement ps = conn.prepareStatement(registrationTable)) 
-        {
-            ps.execute();
-            System.out.println("Registration table ready.");
-        }
-
-    }catch (SQLException e) {System.out.println("Error creating tables: " + e.getMessage());}
-
-}
-   
+    // find specifics per list
+    static Event findEvent(String id) {
+        for (Event e : eventS)
+            if (e.getEventId().equalsIgnoreCase(id)) return e;
+        return null;
+    }
+ 
+    static Participant findParticipant(String id) {
+        for (Participant p : participantS)
+            if (p.getPersonId().equalsIgnoreCase(id)) return p;
+        return null;
+    }
+ 
+    static Registration findRegistration(String id) {
+        for (Registration r : registrationS)
+            if (r.getRegistrationId().equalsIgnoreCase(id)) return r;
+        return null;
+    }
     
 
     private static void addEvent(List<Event> e1){
-        String e_query = "INSERT INTO events(event_name, event_venue, event_date, event_capacity) VALUES(?, ?, ?, ?)";
         System.out.println("---ADD EVENT---");
-
+        String eid = nLine("Event id: ");
+        if( findEvent(eid) != null){System.out.println("Event ID already on Exist"); return;}
         String ename = nLine("Event name: ");
         String evenue = nLine("Event venue: ");
         String edate = nLine("Event date: ");
-        int ecapacity = nInt("Event capacity: ");
-
-        try(Connection conn = conn();
-        PreparedStatement prep2 = conn.prepareStatement(e_query, Statement.RETURN_GENERATED_KEYS)) {
-             // need gumamit nyang statement.return since naka auto increment yung id sa database
-        
-            prep2.setString(1,ename);
-            prep2.setString(2,evenue);
-            prep2.setString(3,edate);
-            prep2.setInt(4,ecapacity);
-            int rows = prep2.executeUpdate();
-            System.out.println(rows + " Inserted Sucessfully");
-
-            ResultSet get_id = prep2.getGeneratedKeys(); 
-           if (get_id.next()) 
-            {int id = get_id.getInt(1);
-                 e1.add(new Event(id, ename, evenue, edate, ecapacity));
-            }
-
-      } catch (SQLException e) {
-       System.out.println("Error Inserting data." + e.getMessage());
-      }
+        int ecapacity = 0;
+        while(ecapacity < 0){
+             ecapacity = nInt("Event capacity: ");
+            if(ecapacity>0){break;}
+        }
+        e1.add(new Event(eid, ename, evenue, edate, ecapacity));
+        System.out.println("Event added sucessfully.");  
     }
 
-
+    // dito kana yaw, bukas mo nalang tuloy
     private static void addParticipant(List<Participant> p1){
-        String e_query = "INSERT INTO participants(participant_name, age, participant_type, participant_organization, contact_no, earlybird ) VALUES(?, ?, ?, ?, ?, ?)";
         System.out.println("---REGISTER PARTICIPANT---");
-
+        String pid = nLine("Enter id: ");
+        if( findParticipant(pid) != null){System.out.println("Participant ID already on Exist"); return;}
         String pfn = nLine("Enter Full Name  : ");
         int page = nInt("Enter Age           : ");
         String pt = nLine("Enter participant type: ");
         String po = nLine("Enter participant_organization: ");
         String pc = nLine("Enter contact_no: "); 
         String eb = nLine("Earlybird?: ").toLowerCase().trim();
+        p1.add(new Participant(pid, pfn, page, pt, po, pc, eb));
+        System.out.println("Participant registered sucessfully.");  
+    }
 
-        try(Connection conn = conn();
-        PreparedStatement prep3 = conn.prepareStatement(e_query, Statement.RETURN_GENERATED_KEYS)) {
-             // same concept lang dito
-        
-            prep3.setString(1,pfn);
-            prep3.setInt(2,page);
-            prep3.setString(3,pt);
-            prep3.setString(4,po);
-            prep3.setString(5,pc);
-            prep3.setString(6,eb);
+    private static void addRegistration(List<Registration> r1){
 
-
-            int rows = prep3.executeUpdate();
-            System.out.println(rows + " Inserted Sucessfully");
-
-            ResultSet get_id = prep3.getGeneratedKeys(); 
-           if (get_id.next()) 
-            {int id = get_id.getInt(1);
-                p1.add(new Participant(id, pfn, page, pt, po, pc, eb));
-            }
-
-      } catch (SQLException e) {
-       System.out.println("Error Inserting data." + e.getMessage());
-      }
     }
 
 
 
+   
+
+    private static void chooseTicketType(){
+    System.out.println("--- CHOOSE TICKET TYPE ---");
+
+        
+        for (Registration r1 : registrationS) {
+        System.out.println(r1.getRegistrationId());
+         }
+        String crd = nLine("Choose Registration ID: ");
+
+
+        try{
+        FileWriter ticketFIle = new FileWriter("Ticket.txt");
+        System.out.println("Error writing file");
+        for (Participant p1 : participantS) {
+        System.out.println(p1.getPersonId());
+         }
+        String cpd = nLine("Choose participant ID: ");
+        for (Event e1 : eventS) {
+        System.out.println(e1.getEventId());
+         }
+        String ced = nLine("Choose Event ID: ");
+        ticketFIle.write(crd +cpd + ced + "\n");
+        ticketFIle.close();
+        System.out.println("Data written successfully.");
+
+        System.out.println("Choose ticket type");
+        System.out.println("R for regular");
+        System.out.println("V for vip");
+        String tType = nLine("choose type (R or V): ").toUpperCase();
+
+  
+
+
+        }catch(IOException e){
+            System.out.println("Error creating ticket" + e.getMessage());
+        }
+    }
+
 
     
-  
 
     
     public static void main(String[] args) {
-
-        System.out.println(EventS);
-        createTables();
-        
+      
         
         int choice;
         do{
         mainMenu();
         choice = 0;
-        try{
         choice = nInt("Enter choice: ");
-         }catch(NumberFormatException e) 
-         {System.out.println(" ");
-         System.out.println("Only number is allowed as an input.");
-         }
         switch (choice) {
             case 1:
-                addEvent(EventS);
+                addEvent(eventS);
                 break;
             case 2:
                 addParticipant(participantS);
                 break;
             case 3:
-                // codes dito
+             
                 break;
             case 4:
                 // codes dito
