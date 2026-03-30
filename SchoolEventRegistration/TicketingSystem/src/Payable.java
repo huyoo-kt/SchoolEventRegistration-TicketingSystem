@@ -1,3 +1,3 @@
 interface Payable {
-     public double computeFinalFee();
+     public double computeFinalFee(Registration registration);
 }

@@ -1,8 +1,6 @@
-import java.io.BufferedReader;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.PrintWriter;
+import java.io.*;
+import java.sql.*;
+
 import java.util.*;
 
 
@@ -172,14 +170,15 @@ public class TicketingSystemMain {
         if(r1 == null){System.out.println("No Registration id Found"); return;}
         
         PaymentCalculator pay1 = new PaymentCalculator();
-        pay1.computeDiscount();
+        pay1.computeDiscount(r1);
 
-        double origs = pay1.computeBaseFee();
-        double disc = pay1.computeDiscount();
-        double fFee = pay1.computeFinalFee();
+        double origs = pay1.computeBaseFee(r1);
+        double disc = pay1.computeDiscount(r1);
+        double fFee = pay1.computeFinalFee(r1);
         r1.setOriginalFee(origs);
         r1.setDiscountAmount(disc);
         r1.setFinalFee(fFee);
+
 
         // display 
         System.out.println("Participant Name : " + r1.getParticipant().getFullName());
@@ -188,14 +187,15 @@ public class TicketingSystemMain {
         System.out.println("Discount Amount  :  "+String.format("%.2f", disc));
         System.out.println("Final Fee        :  "+String.format("%.2f", fFee));
         System.out.println("Fee computed successfully!");
-
         }
+
+
 
         static void confirmPayment(){
             String rid = nLine("Enter Registration ID: ");
             Registration r1 = findRegistration(rid);
             if(r1 == null){System.out.println("No Registration id Found"); return;}
-            if(!(r1.registrationStatus.equalsIgnoreCase("active")))
+            if(!r1.registrationStatus.equalsIgnoreCase("active"))
             {System.out.println("Registration is cancelled. Cannot confirm payment."); return;}
             if (r1.getFinalFee() == 0 && r1.getOriginalFee() == 0) {
             System.out.println("compute the registration fee first."); return;}
