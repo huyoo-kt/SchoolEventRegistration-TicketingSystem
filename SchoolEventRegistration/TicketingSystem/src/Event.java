@@ -80,6 +80,8 @@ public class Event {
      
     }
 
+    
+
     void displayEventInfo(){
         System.out.println("Event ID         : " + eventId);
         System.out.println("Event Name       : " + eventName);

@@ -1,8 +1,8 @@
+import java.io.BufferedReader;
+import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
 import java.util.*;
 
 
@@ -76,6 +76,8 @@ public class TicketingSystemMain {
     private static void addEvent(List<Event> e1){
         System.out.println("---ADD EVENT---");
         String eid = nLine("Event id: ");
+
+        //same consept
         if( findEvent(eid) != null){System.out.println("Event ID already on Exist"); return;}
         String ename = nLine("Event name: ");
         String evenue = nLine("Event venue: ");
@@ -93,7 +95,10 @@ public class TicketingSystemMain {
     private static void addParticipant(List<Participant> p1){
         System.out.println("---REGISTER PARTICIPANT---");
         String pid = nLine("Enter id: ");
+
+        //check if meron na nung id
         if( findParticipant(pid) != null){System.out.println("Participant ID already on Exist"); return;}
+
         String pfn = nLine("Enter Full Name  : ");
         int page = nInt("Enter Age           : ");
         String pt = nLine("Enter participant type: ");
@@ -104,58 +109,165 @@ public class TicketingSystemMain {
         System.out.println("Participant registered sucessfully.");  
     }
 
-    private static void addRegistration(List<Registration> r1){
-
-    }
-
-
-
-   
 
     private static void chooseTicketType(){
     System.out.println("--- CHOOSE TICKET TYPE ---");
 
-        
+      
+        // registration
         for (Registration r1 : registrationS) {
         System.out.println(r1.getRegistrationId());
          }
-        String crd = nLine("Choose Registration ID: ");
+        String crd = nLine("Enter Registration ID: ");
+        if (findRegistration(crd) != null) { System.out.println("Registration ID already exists!"); return; }
 
-
-        try{
-        FileWriter ticketFIle = new FileWriter("Ticket.txt");
-        System.out.println("Error writing file");
+         // participant
         for (Participant p1 : participantS) {
         System.out.println(p1.getPersonId());
          }
-        String cpd = nLine("Choose participant ID: ");
+        String cpd = nLine("Enter participant ID: ");
+
+         // events
         for (Event e1 : eventS) {
         System.out.println(e1.getEventId());
          }
-        String ced = nLine("Choose Event ID: ");
-        ticketFIle.write(crd +cpd + ced + "\n");
-        ticketFIle.close();
-        System.out.println("Data written successfully.");
+        String ced = nLine("Enter Event ID: ");
 
-        System.out.println("Choose ticket type");
-        System.out.println("R for regular");
-        System.out.println("V for vip");
-        String tType = nLine("choose type (R or V): ").toUpperCase();
-
-  
+        Participant p1 = findParticipant(cpd);
+        Event e1 = findEvent(ced);
+        if(p1 == null) {System.out.println("Event not found! ");   return; }
+        if(e1 == null) {System.out.println("Participant not found! "); return; }
 
 
-        }catch(IOException e){
-            System.out.println("Error creating ticket" + e.getMessage());
-        }
+        Ticket t1;
+        String tid = "T-"+crd;
+
+        System.out.println("---Choose ticket type (REGULAR or VIP)---");
+        String tType = nLine("choose type: ").toUpperCase();
+
+        if (tType.equalsIgnoreCase("REGULAR")) {
+             t1 = new RegularTicket(tid, "REGULAR",  500.00);
+                Registration r1 = new Registration(crd, p1, e1, t1);
+                registrationS.add(r1);
+                e1.incrementRegisteredCount();
+                System.out.println("Ticket assigned successfully!");
+
+         }else if(tType.equalsIgnoreCase("VIP")){
+            t1 = new VipTicket(tid, tType, 1000.00, 0.00);
+            Registration r1 = new Registration(crd, p1, e1, t1);
+            registrationS.add(r1);
+            e1.incrementRegisteredCount();
+            System.out.println("Ticket assigned successfully!");
+
+         }else{System.out.println("Invalid, there is no such choice.");}
+
+
     }
-
-
     
 
-    
+       static void computeRegistrationFee(){
+        System.out.println("\n--- COMPUTE REGISTRATION FEE ---");
+        String rid = nLine("Enter Registration ID: ");
+        Registration r1 = findRegistration(rid);
+        if(r1 == null){System.out.println("No Registration id Found"); return;}
+        
+        PaymentCalculator pay1 = new PaymentCalculator();
+        pay1.computeDiscount();
+
+        double origs = pay1.computeBaseFee();
+        double disc = pay1.computeDiscount();
+        double fFee = pay1.computeFinalFee();
+        r1.setOriginalFee(origs);
+        r1.setDiscountAmount(disc);
+        r1.setFinalFee(fFee);
+
+        // display 
+        System.out.println("Participant Name : " + r1.getParticipant().getFullName());
+        System.out.println("Ticket Type      : " + r1.getTicket().getTicketType());
+        System.out.println ("Base Fee        : "+String.format("%.2f", origs));
+        System.out.println("Discount Amount  :  "+String.format("%.2f", disc));
+        System.out.println("Final Fee        :  "+String.format("%.2f", fFee));
+        System.out.println("Fee computed successfully!");
+
+        }
+
+        static void confirmPayment(){
+            String rid = nLine("Enter Registration ID: ");
+            Registration r1 = findRegistration(rid);
+            if(r1 == null){System.out.println("No Registration id Found"); return;}
+            if(!(r1.registrationStatus.equalsIgnoreCase("active")))
+            {System.out.println("Registration is cancelled. Cannot confirm payment."); return;}
+            if (r1.getFinalFee() == 0 && r1.getOriginalFee() == 0) {
+            System.out.println("compute the registration fee first."); return;}
+            r1.setPaymentStatus("Paid");
+            System.out.println("Payment confirmed successfully!");
+        }
+
+
+        static void registrationReceipt(){
+            System.out.println("--- PRINT RECEIPT ---");
+            String rid = nLine("Input Registration id: ");
+            Registration r1 = findRegistration(rid);
+            if(r1 == null){System.out.println("No Registration id Found"); return;}
+            if(!(r1.getPaymentStatus().equalsIgnoreCase("paid")))
+            {System.out.println("Payment must be confirmed before printing the receipt!"); return;}
+
+
+            Receipt re1;
+            String rno = "REC-"+rid;
+
+            re1 = new Receipt(rno, r1);
+            re1.printReceipt();
+
+
+        }
+
+        static void participantSummary(){
+            System.out.println("--- PARTICIPANT SUMMARY ---");
+            String rid = nLine("Input Registration id: ");
+            Registration r1 = findRegistration(rid);
+            if(r1 == null){System.out.println("No Registration id Found"); return;}
+            r1.displayRegistrationSummary();
+        }
+
+        static void searchParticipant(){
+            System.out.println("--- SEARCH PARTICIPANT ---");
+            String rid = nLine("Enter Participant ID or Name: ");
+            Participant p1 = findParticipant(rid);
+            if(p1 == null){System.out.println("No Participant id Found"); return;}
+
+
+            for(Participant p : participantS){
+                if(p.getPersonId().equalsIgnoreCase(rid)|| p.getFullName().equalsIgnoreCase(rid))
+                {System.out.println("Participant found!");}}
+                p1.displayDetails();
+                for(Registration r : registrationS){
+                    System.out.println("Registration ID: "+r.getRegistrationId());
+                    System.out.println("Event Name: "+ r.getEvent().getEventName());
+                    System.out.println("Ticket Type: "+ r.getTicket().getTicketType());
+                    System.out.println("Payment Status:"+ r.getPaymentStatus());
+                    System.out.println("Registration Status: "+ r.getRegistrationStatus());
+                }
+        }
+
+        static void cancelRegistration(){
+            System.out.println("--- CANCEL REGISTRATION ---");
+            String rid =  nLine("Enter Registration ID: ");
+            Registration r1 = findRegistration(rid);
+            if(r1 == null){System.out.println("No Registration id Found"); return;}
+
+            if(!(r1.registrationStatus.equalsIgnoreCase("active"))){
+                System.out.println("Registration is already cancelled."); return;}
+            
+            r1.setRegistrationStatus("cancelled");
+            r1.getEvent().decrementRegisteredCount();
+            System.out.println("Registration cancelled successfully!");
+            System.out.println("Slot has been reopened.");
+        }
+
+
+
     public static void main(String[] args) {
-      
         
         int choice;
         do{
@@ -170,25 +282,25 @@ public class TicketingSystemMain {
                 addParticipant(participantS);
                 break;
             case 3:
-             
+                chooseTicketType();
                 break;
             case 4:
-                // codes dito
+               computeRegistrationFee();
                 break;
             case 5:
-                // codes dito
+               confirmPayment();
                 break;
             case 6:
-                // codes dito
+                registrationReceipt();
                 break;
             case 7:
-                // codes dito
+                 participantSummary();
                 break;
             case 8:
-                // codes dito
+                searchParticipant();
                 break;
             case 9:
-                // codes dito
+                cancelRegistration();
                 break;
             case 10:
             System.out.println("Exit Sucessfully.");

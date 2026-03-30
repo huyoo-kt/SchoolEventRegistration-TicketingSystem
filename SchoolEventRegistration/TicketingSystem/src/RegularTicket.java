@@ -5,7 +5,6 @@ RegularTicket(String ticketId, String ticketType, double baseFee){
     super(ticketId,ticketType,baseFee);
 }
 
-RegularTicket(){}
 
 @Override
   double computeFee(){

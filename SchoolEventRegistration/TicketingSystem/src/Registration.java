@@ -9,8 +9,14 @@ public class Registration {
     String paymentStatus = "Unpaid";
     String registrationStatus = "Active";
     Participant participant;
-   
     
+   
+    Registration(String registrationID, Participant participant, Event event, Ticket ticket){
+        this.registrationId = registrationID;
+        this.participant = participant;
+        this.event = event;
+        this.ticket = ticket;
+    }
 
 
     //getters
