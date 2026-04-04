@@ -5,11 +5,12 @@ public class Participant extends Person {
     private String earlybird = "disable";
 
 
-    Participant(String personId, String fullName, int age, String gender,String participantType,String organization,String contactNumber){
+    Participant(String personId, String fullName, int age, String gender,String participantType,String organization,String contactNumber,String earlybird){
         super(personId,  fullName,  age, gender);
         this.participantType = participantType;
         this.organization = organization;
         this.contactNumber = contactNumber;
+        this.earlybird = earlybird;
     }
 
     void setEarlyB(String earlyb){

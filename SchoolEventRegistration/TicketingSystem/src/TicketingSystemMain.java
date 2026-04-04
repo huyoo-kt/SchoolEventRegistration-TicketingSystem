@@ -100,13 +100,14 @@ public class TicketingSystemMain {
         String pfn = nLine("Enter Full Name  : ");
         int page = nInt("Enter Age           : ");
         String pt = nLine("Enter participant type: ");
+        String pg = nLine("Enter gender: ");
         String po = nLine("Enter participant_organization: ");
         String pc = nLine("Enter contact_no: "); 
         String eb = nLine("Earlybird?: ").toLowerCase().trim();
-        p1.add(new Participant(pid, pfn, page, pt, po, pc, eb));
+        p1.add(new Participant(pid, pfn, page, pg, pt, po, pc,eb));
         System.out.println("Participant registered sucessfully.");  
     }
-
+  
 
     private static void chooseTicketType(){
     System.out.println("--- CHOOSE TICKET TYPE ---");
