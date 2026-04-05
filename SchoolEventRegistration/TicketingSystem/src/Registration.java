@@ -1,6 +1,6 @@
 public class Registration {
 
-    String registrationId;
+    int registrationId;
     Event event;
     Ticket ticket;
     double originalFee = 0.0;
@@ -11,7 +11,7 @@ public class Registration {
     Participant participant;
     
    
-    Registration(String registrationID, Participant participant, Event event, Ticket ticket){
+    Registration(int registrationID, Participant participant, Event event, Ticket ticket){
         this.registrationId = registrationID;
         this.participant = participant;
         this.event = event;
@@ -20,7 +20,7 @@ public class Registration {
 
 
     //getters
-    public String getRegistrationId() {
+    public int getRegistrationId() {
         return registrationId;
     }
 
@@ -58,7 +58,7 @@ public class Registration {
 
 
     //setters
-    public void setRegistrationId(String registrationId) {
+    public void setRegistrationId(int registrationId) {
         this.registrationId = registrationId;
     }
 
