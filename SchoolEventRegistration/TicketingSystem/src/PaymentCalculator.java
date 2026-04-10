@@ -17,7 +17,6 @@ public class PaymentCalculator implements Payable{
           // check kung early bird sya
         if(registration.getParticipant().getEarlyB().equalsIgnoreCase("enable"))
         {disc += comp * earlybird;}
-
         return disc;
     }
     

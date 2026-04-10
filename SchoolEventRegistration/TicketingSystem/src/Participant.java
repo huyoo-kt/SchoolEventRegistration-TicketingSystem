@@ -1,7 +1,7 @@
 public class Participant extends Person {
-    String participantType;
-    String organization;
-    String contactNumber;
+    private String participantType;
+    private String organization;
+    private String contactNumber;
     private String earlybird = "disable";
 
 
