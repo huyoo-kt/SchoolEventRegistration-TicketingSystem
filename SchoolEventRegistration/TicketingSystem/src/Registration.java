@@ -91,7 +91,7 @@ public class Registration {
     }
 
 
-    //choice 6 to, eto
+    //choice 7 to, eto
     void displayRegistrationSummary(){
         System.out.println("Registration ID    : " + registrationId);
         System.out.println("Participant Name   : " + participant.getFullName());

@@ -8,6 +8,8 @@ public class Receipt {
         this.registration = Registration;
     }
 
+
+    //6
     void printReceipt(){
         System.out.println("=================================================");
         System.out.println("         ===REGISTRATION RECEIPT===");
