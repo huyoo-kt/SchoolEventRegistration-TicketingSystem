@@ -251,17 +251,43 @@ public class TicketingSystemMain {
         return null;
     }
 
+    // to check if the event capacity is already full
+    private static boolean checkCAPA(int eid){
+        String sql = "select e.event_capacity, COUNT(r.registration_id) as reg_count from events e left join registrations r on r.event_id = e.event_id where e.event_id = ? AND r.registration_status != 'CANCELLED' OR 'cancelled' GROUP BY e.event_id";
+
+        try(Connection conn = conn();
+            PreparedStatement preps1 = conn.prepareStatement(sql)){
+                preps1.setInt(1, eid);
+                ResultSet r1 = preps1.executeQuery();
+
+                if(r1.next()){
+                    int count = r1.getInt("reg_count");
+                    int capacity = r1.getInt("event_capacity");
+                    return count >= capacity; // if yung capacity is
+                }
+            
+        } catch (SQLException e) {
+           System.out.println("Error checking the capacity"+ e.getMessage());
+        }
+    return false;
+
+
+    }
+
+
 
   private static void chooseTType() {
     System.out.println("---CHOOSE TICKET TYPE---");
     int pid = nInt("Enter Participant ID: ");
-    int eid = nInt("Enter Event ID: ");
-
-    Participant p = findParticipant(pid);
+     Participant p = findParticipant(pid);
     if (p == null) { System.out.println("Participant not found."); return;}
+    int eid = nInt("Enter Event ID: ");
+    if(checkCAPA(eid)){System.out.println("Sorry, event registration is already full."); return;}
+
 
     String type = nLine("Ticket Type (REGULAR/VIP): ");
     String sql = "INSERT INTO registrations(participant_id, event_id, ticket_type) VALUES(?, ?, ?)";
+
     try (Connection con = conn();
         PreparedStatement ps = con.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
         ps.setInt(1, pid);
@@ -506,7 +532,7 @@ while (rs.next()) {
                 if(!(r1.getRegistrationStatus().equalsIgnoreCase("active"))){
                     System.out.println("Registration is already cancelled."); return;}
 
-                String sqlcr = "update registrations set registration_status = 'cancelled' where registration_id = ?";
+                String sqlcr = "update registrations set registration_status = 'CANCELLED' where registration_id = ?";
                 try(Connection concr = conn();
                     PreparedStatement pscr = concr.prepareStatement(sqlcr)){
                         pscr.setInt(1, rid);
