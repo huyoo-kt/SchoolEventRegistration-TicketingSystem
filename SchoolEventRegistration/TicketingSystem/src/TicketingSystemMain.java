@@ -218,14 +218,34 @@ public class TicketingSystemMain {
     private static Participant addParticipant(){
         System.out.println("---REGISTER PARTICIPANT---");
  
-        String pfn = nLine("Enter Full Name  : ");
-        int page = nInt("Enter Age           : ");
-        String pg = nLine("Enter participant gender: ");
-        String pt = nLine("Enter participant type: ");
+        String pfn = nLine("Enter Full Name: ");
+        int page = nInt("Enter Age: ");
+        String pg;
+                do {
+            pg = nLine("Enter participant gender(male or female): ");
+            if(!pg.equalsIgnoreCase("male") && !pg.equalsIgnoreCase("female")){
+                System.out.println("you can only input the given choices, try again.");}
+        } while(!pg.equalsIgnoreCase("male") && !pg.equalsIgnoreCase("female"));
+
+        String pt;
+        do {
+            pt = nLine("Enter participant type(student or regular): ");
+            if(!pt.equalsIgnoreCase("student") && !pt.equalsIgnoreCase("regular")){
+                System.out.println("you can only input the given choices, try again.");}
+        } while(!pt.equalsIgnoreCase("student") && !pt.equalsIgnoreCase("regular"));
+
+
         String po = nLine("Enter participant_organization: ");
         String pc = nLine("Enter contact_no: "); 
-        String eb = nLine("Earlybird?: ").toLowerCase().trim();
-
+        String eb;
+        do {
+            eb = nLine("Earlybird(enable or disable): ").toLowerCase().trim();
+            if(!eb.equalsIgnoreCase("enable") && !eb.equalsIgnoreCase("disable")){
+                System.out.println("you can only input the given choices, try again.");}
+        } while(!eb.equalsIgnoreCase("enable") && !eb.equalsIgnoreCase("disable"));
+        
+      
+      
 
         String pql = "INSERT INTO participants(participant_name, age, participant_gender, participant_type, participant_organization, contact_no, earlybird ) VALUES(?, ?, ?, ?, ?, ?,?)";
         try(Connection con2 = conn();
@@ -253,7 +273,8 @@ public class TicketingSystemMain {
 
     // to check if the event capacity is already full
     private static boolean checkCAPA(int eid){
-        String sql = "select e.event_capacity, COUNT(r.registration_id) as reg_count from events e left join registrations r on r.event_id = e.event_id where e.event_id = ? AND r.registration_status != 'CANCELLED' OR 'cancelled' GROUP BY e.event_id";
+        // count lahat ng registered id as reg_count then compare it to capacity ng event while also validating that only the participant who is not "cancled" yung ma cacall, theni group using event id para mas goods tingnan.
+        String sql = "select e.event_capacity, COUNT(r.registration_id) as reg_count from events e left join registrations r on r.event_id = e.event_id where e.event_id = ? AND r.registration_status != 'CANCELLED' GROUP BY e.event_id";
 
         try(Connection conn = conn();
             PreparedStatement preps1 = conn.prepareStatement(sql)){
@@ -283,11 +304,14 @@ public class TicketingSystemMain {
     if (p == null) { System.out.println("Participant not found."); return;}
     int eid = nInt("Enter Event ID: ");
     if(checkCAPA(eid)){System.out.println("Sorry, event registration is already full."); return;}
+    String type;
+    do {
+        type = nLine("Ticket Type (REGULAR/VIP): ");
+        System.out.println("you can only input the given choices, try again.");
+    } while (!type.equalsIgnoreCase("regular") && !type.equalsIgnoreCase("vip"));
 
 
-    String type = nLine("Ticket Type (REGULAR/VIP): ");
     String sql = "INSERT INTO registrations(participant_id, event_id, ticket_type) VALUES(?, ?, ?)";
-
     try (Connection con = conn();
         PreparedStatement ps = con.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
         ps.setInt(1, pid);
@@ -369,27 +393,26 @@ public class TicketingSystemMain {
         }
 
     static void participantSummary() {
-    System.out.println("--- PARTICIPANT SUMMARY ---");
-
+    System.out.println("------------------------------- PARTICIPANT SUMMARY ------------------------------");
+  
     // Step 1 — show lahat ng event
     String eall = "SELECT * FROM events";
     try (Connection con = conn();
          PreparedStatement ps = con.prepareStatement(eall);
          ResultSet rse = ps.executeQuery()) {
 
-        System.out.printf("%-5s %-30s %-20s %-15s %-10s%n",
-            "ID", "Event Name", "Venue", "Date", "Capacity");
-        System.out.println("-".repeat(85));
+        System.out.printf("%-5s %-30s %-20s %-15s %-10s%n","ID", "Event Name", "Venue", "Date", "Capacity");
+        System.out.println("-".repeat(82));
 
         while (rse.next()) {
-            System.out.printf("%-5d %-30s %-20s %-15s %-10d%n",
-                rse.getInt("event_id"),
-                rse.getString("event_name"),
-                rse.getString("event_venue"),
-                rse.getString("event_date"),
-                rse.getInt("event_capacity"));
+            System.out.printf("%-5d %-30s %-15s %-20s %-10d%n",
+            rse.getInt("event_id"),
+            rse.getString("event_name"),
+            rse.getString("event_venue"),
+            rse.getString("event_date"),
+            rse.getInt("event_capacity"));
         }
-
+         System.out.println("-".repeat(82));
     } catch (SQLException e) {
         System.out.println("Error fetching events: " + e.getMessage());
         return;
@@ -397,6 +420,7 @@ public class TicketingSystemMain {
 
     // Step 2 — user picks an event
     int eid = nInt("Enter Event ID: ");
+    System.out.println(" ");
     Event ev = findEvent(eid);
     if (ev == null) { System.out.println("Event not found."); return; }
 
@@ -409,13 +433,15 @@ public class TicketingSystemMain {
         ps.setInt(1, eid);
         ResultSet rs = ps.executeQuery();
         System.out.println("Participants for event: " + ev.getEventName());
-        System.out.printf("%-5s %-25s %-5s %-10s %-20s %-15s %-10s %-30s %-10s %-12s %-15s %-10s %-10s %-10s%n","Participant ID", "Name", "Age", "Participant Type", "Organization", "Contact", "Earlybird", "Event Name", "Ticket type", "Original Fee", "Discount Amount", "Final Fee", "Payment Status", "Registration Status");
-        System.out.println("-".repeat(180));
+        System.out.println("-".repeat(152));
+        System.out.printf("%-5s %-8s %-6s %-12s %-7s %-8s %-10s %-13s %-7s %-12s %-13s %-10s %-14s %-10s%n","pID", "Name", "Age", "pType", "Org", "Contact", "Earlyb", "E Name", "T type", "Orig Fee", "Disc Amount", "Fnl Fee", "Pymnt Status", "RegStatus");
+        System.out.println("-".repeat(152));
+        System.out.println("-".repeat(152));
 
 boolean found = false;
 while (rs.next()) {
     found = true;
-    System.out.printf("%-5d %-25s %-5d %-10s %-20s %-15s %-10s %-30s %-10s %-12.2f %-15.2f %-10.2f %-10s %-10s%n",
+    System.out.printf("%-5s %-8s %-6s %-8s %-8s %-7s %-7s %-7s %-8s %-13s %-13s %-13s %-10s %-10s%n",
         rs.getInt("participant_id"),
         rs.getString("participant_name"),
         rs.getInt("age"),
@@ -431,6 +457,8 @@ while (rs.next()) {
         rs.getString("payment_status"),
         rs.getString("registration_status"));
         }
+        System.out.println("-".repeat(152));
+        System.out.println(" ");
         if (!found) System.out.println("No participants registered for this event yet.");
     } catch (SQLException e) {
         System.out.println("Error finding participants: " + e.getMessage());
@@ -453,13 +481,14 @@ while (rs.next()) {
                 PreparedStatement prepsp = consp.prepareStatement(sqlids)) {
                 prepsp.setInt(1, sid);
                 ResultSet sp = prepsp.executeQuery();
-                System.out.printf("%-5s %-20s %-5s %-10s %-10s %-20s %-15s %-10s %-10s %-25s %-10s %-10s %-10s%n","ID", "Name", "Age", "Gender", "Type", "Organization", "Contact", "Earlybird", "Reg ID", "Event Name", "Ticket", "Payment", "Status");
-                System.out.println("-".repeat(165));
-
+                System.out.println("-".repeat(152));
+                System.out.printf("%-5s %-8s %-6s %-10s %-9s %-18s %-10s %-15s %-9s %-14s %-12s %-12s %-14s%n","ID", "Name", "Age", "Gender", "Type", "Organization", "Contact", "Earlybird", "Reg ID", "Event Name", "Ticket", "Payment", "Status");
+                System.out.println("-".repeat(152));
+                System.out.println("-".repeat(152));
                 boolean found = false;
             while (sp.next()) {
             found = true;
-                System.out.printf("%-5d %-20s %-5d %-10s %-10s %-20s %-15s %-10s %-10d %-25s %-10s %-10s %-10s%n",
+                System.out.printf("%-5s %-8s %-6s %-8s %-10s %-19s %-11s %-15s %-4s %-17s %-12s %-10s %-10s%n",
                 sp.getInt("participant_id"),
                 sp.getString("participant_name"),
                 sp.getInt("age"),
@@ -474,7 +503,9 @@ while (rs.next()) {
                 sp.getString("payment_status"),
                 sp.getString("registration_status"));
                 }
-                    if (!found) System.out.println("Participant not found!");
+                if (!found) System.out.println("Participant not found!");
+                System.out.println("-".repeat(152));
+                    System.out.println(" ");
                 }catch(SQLException e){System.out.println("Error searching participant." + e.getMessage());}
                 break;
 
@@ -488,13 +519,15 @@ while (rs.next()) {
                         ResultSet sp = prepsp.executeQuery();
                         
                          // header
-                        System.out.printf("%-5s %-20s %-5s %-10s %-10s %-20s %-15s %-10s %-10s %-25s %-10s %-10s %-10s%n","ID", "Name", "Age", "Gender", "Type", "Organization", "Contact", "Earlybird", "Reg ID", "Event Name", "Ticket", "Payment", "Status");
-                        System.out.println("-".repeat(165));
+                        System.out.println("-".repeat(152));
+                        System.out.printf("%-5s %-8s %-6s %-10s %-9s %-18s %-10s %-15s %-9s %-14s %-12s %-12s %-14s%n","ID", "Name", "Age", "Gender", "Type", "Organization", "Contact", "Earlybird", "Reg ID", "Event Name", "Ticket", "Payment", "Status");
+                        System.out.println("-".repeat(152));
+                        System.out.println("-".repeat(152));
                         boolean found = false;
                         // laman
                         while(sp.next()){
                         found = true;
-                        System.out.printf("%-5d %-20s %-5d %-10s %-10s %-20s %-15s %-10s %-10d %-25s %-10s %-10s %-10s%n",
+                        System.out.printf("%-5s %-8s %-6s %-8s %-10s %-19s %-11s %-15s %-4s %-17s %-12s %-10s %-10s%n",
                         sp.getInt("participant_id"),
                         sp.getString("participant_name"),
                         sp.getInt("age"),
@@ -511,6 +544,8 @@ while (rs.next()) {
                     }
 
                     if(!found){System.out.println("Participant not found.");}
+                     System.out.println("-".repeat(152));
+                     System.out.println(" ");
                      }catch(SQLException e){
                         System.out.println("Error searching participant." + e.getMessage()); }
                     break;
